@@ -3,26 +3,26 @@ import { useEffect, useState } from "react";
 export const useControls = (vehicleApi, chassisApi) => {
   let [controls, setControls] = useState({ });
 
-  // useeffect to listen for keys
   useEffect(() => {
-    window.addEventListener("keydown", (e) => {
+    const keyDownPressHandler = (e) => {
       setControls((controls) => ({ ...controls, [e.key.toLowerCase()]: true }));
-    });
-    window.addEventListener("keyup", (e) => {
+    }
+
+    const keyUpPressHandler = (e) => {
       setControls((controls) => ({ ...controls, [e.key.toLowerCase()]: false }));
-    });
+    }
+
+    window.addEventListener("keydown", keyDownPressHandler);
+    window.addEventListener("keyup", keyUpPressHandler);
     return () => {
-      window.removeEventListener("keydown", (e) => {
-        setControls((controls) => ({ ...controls, [e.key.toLowerCase()]: true }));
-      });
-      window.removeEventListener("keyup", (e) => {
-        setControls((controls) => ({ ...controls, [e.key.toLowerCase()]: false }));
-      });
+      window.removeEventListener("keydown", keyDownPressHandler);
+      window.removeEventListener("keyup", keyUpPressHandler);
     }
   }, []);
-  //if not rendered yet return
+
   useEffect(() => {
     if(!vehicleApi || !chassisApi) return;
+
     if (controls.w) {
       vehicleApi.applyEngineForce(150, 2);
       vehicleApi.applyEngineForce(150, 3);
@@ -45,14 +45,18 @@ export const useControls = (vehicleApi, chassisApi) => {
       vehicleApi.setSteeringValue(0.1, 0);
       vehicleApi.setSteeringValue(0.1, 1);
     } else {
-      // set all to 0
       for(let i = 0; i < 4; i++) {
         vehicleApi.setSteeringValue(0, i);
       }
     }
-    // reset cars position
+
+    if (controls.arrowdown)  chassisApi.applyLocalImpulse([0, -5, 0], [0, 0, +1]);
+    if (controls.arrowup)    chassisApi.applyLocalImpulse([0, -5, 0], [0, 0, -1]);
+    if (controls.arrowleft)  chassisApi.applyLocalImpulse([0, -5, 0], [-0.5, 0, 0]);
+    if (controls.arrowright) chassisApi.applyLocalImpulse([0, -5, 0], [+0.5, 0, 0]);
+
     if (controls.r) {
-      chassisApi.position.set(-1.5, 5, 3);
+      chassisApi.position.set(-1.5, 0.5, 3);
       chassisApi.velocity.set(0, 0, 0);
       chassisApi.angularVelocity.set(0, 0, 0);
       chassisApi.rotation.set(0, 0, 0);
